@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Copy this file to `settings.sh` and keep it private!
+
+export NEST_USERNAME='my_nest_username@yourdomain.com'
+export NEST_PASSWORD='my_nest_password'
+export NEST_DEVICE_ID='my_nest_device_id'
+export INFLUX_HOST='yourhost'
+export INFLUX_PORT='8086'
+export INFLUX_DB='nest'
+export INFLUX_USER='youruser'
+export INFLUX_PASSWORD='yourpassword'
