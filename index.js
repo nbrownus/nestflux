@@ -25,7 +25,7 @@ nest.login(username, password, function (err, data) {
     }
 
     nest.fetchStatus(function (data) {
-        var influxData = { name: 'nest', columns: [], points: [[]] }
+        var influxData = []
 
         if (!data.hasOwnProperty('device') || !data.device.hasOwnProperty(device)) {
             console.log('Could not find device with the id "' + device + '"')
@@ -42,14 +42,20 @@ nest.login(username, password, function (err, data) {
         addPoint(data.device[device], 'target_humidity', null, influxData)
         addPoint(data.device[device], 'learning_days_completed_heat', null, influxData)
 
-        addPoint(data.shared[device], 'target_temperature', null, influxData)
-        addPoint(data.shared[device], 'current_temperature', null, influxData)
+        addPoint(data.shared[device], 'target_temperature', null, influxData, fToC)
+        addPoint(data.shared[device], 'current_temperature', null, influxData, fToC)
         addPoint(data.shared[device], 'auto_away', 'auto_away_on', influxData)
+        addPoint(data.shared[device], 'hvac_heater_state', 'heater_on', influxData, function (value) {
+            if (value) {
+                return 1
+            }
 
-        console.log(influxData)
+            return 0
+        })
+
+        console.log(JSON.stringify(influxData))
         var resBody = ''
 
-        console.log(reqOptions)
         var req = http.request(reqOptions, function (res) {
             res.on('data', function (data) {
                 resBody += data.toString()
@@ -75,18 +81,26 @@ nest.login(username, password, function (err, data) {
             process.exit(1)
         })
 
-        req.write(JSON.stringify([influxData]))
+        req.write(JSON.stringify(influxData))
         req.end()
     })
 })
 
 
-var addPoint = function (source, point, name, destination) {
+var addPoint = function (source, point, name, destination, convertFunc) {
     if (source.hasOwnProperty(point)) {
         var useName = (name == void 0) ? point : name
-        destination.columns.push(useName)
-        destination.points[0].push(source[point])
+            , useFunc = convertFunc || function (value) { return value }
+        destination.push({
+            name: 'nest.' + useName,
+            columns: [ 'value' ],
+            points: [[ useFunc(source[point]) ]]
+        })
     }
+}
+
+var fToC = function (temp) {
+    return (((temp * 9) / 5) + 32)
 }
 
 /*
