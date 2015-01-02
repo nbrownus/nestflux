@@ -19,8 +19,8 @@ var reqOptions = {
 
 nest.login(username, password, function (err, data) {
     if (err) {
-        console.log('There was some weird error')
-        console.log(err)
+        console.error('There was some weird error')
+        console.error(err)
         process.exit(1)
     }
 
@@ -28,12 +28,12 @@ nest.login(username, password, function (err, data) {
         var influxData = []
 
         if (!data.hasOwnProperty('device') || !data.device.hasOwnProperty(device)) {
-            console.log('Could not find device with the id "' + device + '"')
+            console.error('Could not find device with the id "' + device + '"')
             process.exit(1)
         }
 
         if (!data.hasOwnProperty('shared') || !data.shared.hasOwnProperty(device)) {
-            console.log('Could not find shared device with the id "' + device + '"')
+            console.error('Could not find shared device with the id "' + device + '"')
             process.exit(1)
         }
 
@@ -63,8 +63,8 @@ nest.login(username, password, function (err, data) {
 
             res.on('end', function () {
                 if (res.statusCode != '200') {
-                    console.log('Something bad happened with influx!')
-                    console.log(resBody)
+                    console.error('Something bad happened with influx!')
+                    console.error(resBody)
                     process.exit(1)
                 }
 
@@ -76,8 +76,8 @@ nest.login(username, password, function (err, data) {
         })
 
         req.on('error', function (error) {
-            console.log('Influx did not like us')
-            console.log(error)
+            console.error('Influx did not like us')
+            console.error(error)
             process.exit(1)
         })
 
