@@ -1,10 +1,12 @@
 {
-    "name": "nextflux",
-    "version": "1.0.0",
-    "description": "Import nest thermostat data to influx db",
+    "name": "nestflux",
+    "version": "0.0.0",
+    "description": "Import Nest thermostat and Weather Underground data into InfluxDB",
     "keywords": [
         "nest",
         "thermostat",
+        "wunderground",
+        "weather",
         "influx",
         "influxdb"
     ],
@@ -15,9 +17,6 @@
     "repository": {
         "type": "git",
         "url": "https://github.com/nbrownus/nestflux.git"
-    },
-    "bin": {
-        "ppunit": "./bin/ppunit"
     },
     "main": "./index",
     "license": "MIT",
