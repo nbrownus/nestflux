@@ -1,4 +1,5 @@
 .idea
-.swp
+*.swp
+node_modules
 *.iml
 settings.sh

@@ -25,8 +25,7 @@
         "node": ">= 0.10.x"
     },
     "dependencies": {
-        "unofficial-nest-api": "0.1.4",
-        "request": "2.51.0"
+        "unofficial-nest-api": "0.1.4"
     },
     "devDependencies": {
         "istanbul": "0.1.x"

@@ -8,14 +8,21 @@ var nest = require('unofficial-nest-api'),
     influxPort = process.env.INFLUX_PORT,
     influxDb = process.env.INFLUX_DB,
     influxUser = process.env.INFLUX_USER,
-    influxPassword = process.env.INFLUX_PASSWORD
+    influxPassword = process.env.INFLUX_PASSWORD,
+    wundergroundKey = process.env.WUNDERGROUND_KEY,
+    wundergroundStation = process.env.WUNDERGROUND_STATION
 
-var reqOptions = {
-    host: influxHost,
-    port: influxPort,
-    path: '/db/' + influxDb + '/series?' + querystring.stringify({ u: influxUser, p: influxPassword }),
-    method: 'POST'
-}
+var influxReqOptions = {
+        host: influxHost,
+        port: influxPort,
+        path: '/db/' + influxDb + '/series?' + querystring.stringify({ u: influxUser, p: influxPassword }),
+        method: 'POST'
+    },
+    wundergroundReqOptions = {
+        host: 'api.wunderground.com',
+        path: '/api/' + wundergroundKey + '/conditions/q/pws:' + wundergroundStation + '.json',
+        method: 'GET'
+    }
 
 nest.login(username, password, function (err, data) {
     if (err) {
@@ -37,15 +44,15 @@ nest.login(username, password, function (err, data) {
             process.exit(1)
         }
 
-        addPoint(data.device[device], 'battery_level', null, influxData)
-        addPoint(data.device[device], 'current_humidity', null, influxData)
-        addPoint(data.device[device], 'target_humidity', null, influxData)
-        addPoint(data.device[device], 'learning_days_completed_heat', null, influxData)
+        addInfluxPoint(data.device[device], 'battery_level', null, influxData)
+        addInfluxPoint(data.device[device], 'current_humidity', null, influxData)
+        addInfluxPoint(data.device[device], 'target_humidity', null, influxData)
+        addInfluxPoint(data.device[device], 'learning_days_completed_heat', null, influxData)
 
-        addPoint(data.shared[device], 'target_temperature', null, influxData, fToC)
-        addPoint(data.shared[device], 'current_temperature', null, influxData, fToC)
-        addPoint(data.shared[device], 'auto_away', 'auto_away_on', influxData)
-        addPoint(data.shared[device], 'hvac_heater_state', 'heater_on', influxData, function (value) {
+        addInfluxPoint(data.shared[device], 'target_temperature', null, influxData, fToC)
+        addInfluxPoint(data.shared[device], 'current_temperature', null, influxData, fToC)
+        addInfluxPoint(data.shared[device], 'auto_away', 'auto_away_on', influxData)
+        addInfluxPoint(data.shared[device], 'hvac_heater_state', 'heater_on', influxData, function (value) {
             if (value) {
                 return 1
             }
@@ -54,40 +61,81 @@ nest.login(username, password, function (err, data) {
         })
 
         console.log(JSON.stringify(influxData))
-        var resBody = ''
-
-        var req = http.request(reqOptions, function (res) {
-            res.on('data', function (data) {
-                resBody += data.toString()
-            })
-
-            res.on('end', function () {
-                if (res.statusCode != '200') {
-                    console.error('Something bad happened with influx!')
-                    console.error(resBody)
-                    process.exit(1)
-                }
-
-
-                console.log('DONE!')
-                console.log(resBody)
-                process.exit(0)
-            })
+        postInfluxData(influxData, function () {
+            console.log('NEST DONE!')
+            wunderground()
         })
-
-        req.on('error', function (error) {
-            console.error('Influx did not like us')
-            console.error(error)
-            process.exit(1)
-        })
-
-        req.write(JSON.stringify(influxData))
-        req.end()
     })
 })
 
+var wunderground = function () {
+    http.get(wundergroundReqOptions, function (response) {
+        var data = ''
+        response.on('data', function (body) {
+            data += body.toString()
+        })
 
-var addPoint = function (source, point, name, destination, convertFunc) {
+        response.on('end', function () {
+            try {
+                var wundergroundData = JSON.parse(data)
+            } catch (error) {
+                console.error('Failed to parse wunderground data')
+                console.error(data)
+                process.exit(1)
+            }
+
+            if (!wundergroundData.hasOwnProperty('current_observation')) {
+                console.error('Did not find the weather info we need!')
+                console.error(data)
+                process.exit(1)
+            }
+
+            var influxData = []
+            addInfluxPoint(wundergroundData['current_observation'], 'temp_f', 'outside_temperature', influxData)
+            addInfluxPoint(wundergroundData['current_observation'], 'relative_humidity', 'outside_humidity', influxData)
+
+            postInfluxData(influxData, function () {
+                console.log('WUNDERGROUND DONE!')
+                process.exit(0)
+            })
+        })
+    }).on('error', function (error) {
+        console.error('Wunderground error')
+        console.error(error)
+        process.exit(1)
+    })
+}
+
+var postInfluxData = function (data, callback) {
+    var resBody = ''
+
+    var req = http.request(influxReqOptions, function (res) {
+        res.on('data', function (data) {
+            resBody += data.toString()
+        })
+
+        res.on('end', function () {
+            if (res.statusCode != '200') {
+                console.error('Something bad happened with influx!')
+                console.error(resBody)
+                process.exit(1)
+            }
+
+            callback()
+        })
+    })
+
+    req.on('error', function (error) {
+        console.error('Influx did not like us')
+        console.error(error)
+        process.exit(1)
+    })
+
+    req.write(JSON.stringify(data))
+    req.end()
+}
+
+var addInfluxPoint = function (source, point, name, destination, convertFunc) {
     if (source.hasOwnProperty(point)) {
         var useName = (name == void 0) ? point : name
             , useFunc = convertFunc || function (value) { return value }
