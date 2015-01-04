@@ -68,6 +68,9 @@ nest.login(username, password, function (err, data) {
     })
 })
 
+/**
+ * Helper function to get weather information from Weather Underground and insert into Influx
+ */
 var wunderground = function () {
     http.get(wundergroundReqOptions, function (response) {
         var data = ''
@@ -92,7 +95,7 @@ var wunderground = function () {
 
             var influxData = []
             addInfluxPoint(wundergroundData['current_observation'], 'temp_f', 'outside_temperature', influxData)
-            addInfluxPoint(wundergroundData['current_observation'], 'relative_humidity', 'outside_humidity', influxData)
+            addInfluxPoint(wundergroundData['current_observation'], 'relative_humidity', 'outside_humidity', influxData, parseInt)
 
             postInfluxData(influxData, function () {
                 console.log('WUNDERGROUND DONE!')
@@ -106,6 +109,13 @@ var wunderground = function () {
     })
 }
 
+/**
+ * Handles posting an Influx data structure to Influx
+ * If this fails to insert into Influx the program is terminated
+ *
+ * @param {Object} data The Influx data structure to submit
+ * @param {Function} callback A function that is called on success
+ */
 var postInfluxData = function (data, callback) {
     var resBody = ''
 
@@ -135,6 +145,15 @@ var postInfluxData = function (data, callback) {
     req.end()
 }
 
+/**
+ * Add a data point to an Influx data structure for import into Influx
+ *
+ * @param {Object} source The object to search for the point to add into destination
+ * @param {String} point The property in source to add into destination
+ * @param {String} [name=point] Overrides the point name in the Influx data structure
+ * @param {Object} destination The object to insert the data from source into (this is what will be given to Influx)
+ * @param {Function} [convertFunc] Optional function to convert a found point value
+ */
 var addInfluxPoint = function (source, point, name, destination, convertFunc) {
     if (source.hasOwnProperty(point)) {
         var useName = (name == void 0) ? point : name
@@ -147,41 +166,13 @@ var addInfluxPoint = function (source, point, name, destination, convertFunc) {
     }
 }
 
-var fToC = function (temp) {
-    return (((temp * 9) / 5) + 32)
-}
-
-/*
-"device": {
-    "02AA01AC34140FTS": {
-        "battery_level": 3.72,
-        "current_humidity": 47,
-
-        "away_temperature_high": 24.444,
-        "temperature_lock_high_temp": 22.222,
-        "leaf_threshold_heat": 18.334,
-        "target_humidity": 35,
-        "lower_safety_temp": 4.444,
-        "current_schedule_mode": "HEAT",
-        "leaf_away_high": 28.88,
-
-        "learning_days_completed_heat": 45,
-
-        "away_temperature_low": 12.898,
-        "upper_safety_temp": 35,
-        "temperature_lock_low_temp": 20,
-        "leaf_away_low": 19.444,
-    }
-},
-
-"shared": {
-    "02AA01AC34140FTS": {
-        "auto_away": 0,
-        "hvac_heater_state": false,
-        "target_temperature_high": 24,
-        "target_temperature_low": 20,
-        "target_temperature": 19.44444,
-        "current_temperature": 19.96,
-    }
-},
+/**
+ * Convert Celsius to Fahrenheit
+ *
+ * @param {Number} temp The temperature in Celsius
+ *
+ * @returns {Number} The temperature in Fahrenheit
  */
+var fToC = function (temp) {
+    return ((temp * (9 / 5)) + 32)
+}
