@@ -17,7 +17,7 @@
       "panels": [
         {
           "error": false,
-          "span": 6,
+          "span": 12,
           "editable": true,
           "type": "graph",
           "id": 1,
@@ -28,13 +28,13 @@
           "scale": 1,
           "y_formats": [
             "short",
-            "short"
+            "none"
           ],
           "grid": {
             "leftMax": null,
-            "rightMax": null,
+            "rightMax": 1,
             "leftMin": null,
-            "rightMin": null,
+            "rightMin": 0,
             "threshold1": null,
             "threshold2": null,
             "threshold1Color": "rgba(216, 200, 27, 0.27)",
@@ -46,7 +46,7 @@
           },
           "resolution": 100,
           "lines": true,
-          "fill": 1,
+          "fill": 0,
           "linewidth": 2,
           "points": true,
           "pointradius": 1,
@@ -99,34 +99,61 @@
               "alias": "Outside",
               "hide": false,
               "fill": ""
+            },
+            {
+              "function": "last",
+              "column": "value",
+              "series": "nest.heater_on",
+              "query": "select last(value) from \"nest.heater_on\" where $timeFilter group by time($interval) order asc",
+              "alias": "Heating",
+              "hide": false,
+              "fill": ""
             }
           ],
           "aliasColors": {},
-          "seriesOverrides": [],
+          "seriesOverrides": [
+            {
+              "alias": "Heating",
+              "yaxis": 2,
+              "points": false,
+              "linewidth": 0,
+              "steppedLine": true,
+              "zindex": -1,
+              "fill": 5
+            }
+          ],
           "title": "Temperature",
           "leftYAxisLabel": "°F",
           "links": []
-        },
+        }
+      ]
+    },
+    {
+      "title": "Row1",
+      "height": "250px",
+      "editable": true,
+      "collapse": false,
+      "panels": [
         {
           "error": false,
           "span": 6,
           "editable": true,
           "type": "graph",
-          "id": 3,
+          "id": 2,
           "datasource": null,
           "renderer": "flot",
           "x-axis": true,
           "y-axis": true,
           "scale": 1,
           "y_formats": [
-            "percent",
-            "short"
+            "short",
+            "none"
           ],
           "grid": {
             "leftMax": null,
-            "rightMax": null,
+            "rightMax": 1,
             "leftMin": 0,
-            "rightMin": null,
+            "rightMin": 0,
             "threshold1": null,
             "threshold2": null,
             "threshold1Color": "rgba(216, 200, 27, 0.27)",
@@ -137,7 +164,7 @@
           },
           "resolution": 100,
           "lines": true,
-          "fill": 1,
+          "fill": 0,
           "linewidth": 2,
           "points": true,
           "pointradius": 1,
@@ -165,59 +192,54 @@
             {
               "function": "last",
               "column": "value",
-              "series": "nest.current_humidity",
-              "query": "select last(value) from \"nest.current_humidity\" where $timeFilter group by time($interval) order asc",
-              "alias": "Current"
+              "series": "nest.battery_level",
+              "query": "select last(value) from \"nest.battery_level\" where $timeFilter group by time($interval) order asc",
+              "alias": "Voltage"
             },
             {
               "function": "last",
               "column": "value",
-              "series": "nest.target_humidity",
-              "query": "select last(value) from \"nest.target_humidity\" where $timeFilter group by time($interval) order asc",
-              "alias": "Target"
-            },
-            {
-              "function": "last",
-              "column": "value",
-              "series": "nest.outside_humidity",
-              "query": "select last(value) from \"nest.outside_humidity\" where $timeFilter group by time($interval) order asc",
-              "alias": "Outside"
+              "series": "nest.heater_on",
+              "query": "select last(value) from \"nest.heater_on\" where $timeFilter group by time($interval) order asc",
+              "alias": "Heating"
             }
           ],
           "aliasColors": {},
-          "seriesOverrides": [],
-          "title": "Humidity",
-          "leftYAxisLabel": "",
+          "seriesOverrides": [
+            {
+              "alias": "Heating",
+              "steppedLine": true,
+              "linewidth": 0,
+              "points": false,
+              "yaxis": 2,
+              "fill": 5,
+              "zindex": -3
+            }
+          ],
+          "title": "Battery",
+          "leftYAxisLabel": "Volts",
           "links": []
-        }
-      ]
-    },
-    {
-      "title": "Row1",
-      "height": "250px",
-      "editable": true,
-      "collapse": false,
-      "panels": [
+        },
         {
           "error": false,
           "span": 6,
           "editable": true,
           "type": "graph",
-          "id": 2,
+          "id": 3,
           "datasource": null,
           "renderer": "flot",
           "x-axis": true,
           "y-axis": true,
           "scale": 1,
           "y_formats": [
-            "short",
-            "short"
+            "percent",
+            "none"
           ],
           "grid": {
             "leftMax": null,
-            "rightMax": null,
+            "rightMax": 1,
             "leftMin": 0,
-            "rightMin": null,
+            "rightMin": 0,
             "threshold1": null,
             "threshold2": null,
             "threshold1Color": "rgba(216, 200, 27, 0.27)",
@@ -228,14 +250,14 @@
           },
           "resolution": 100,
           "lines": true,
-          "fill": 1,
+          "fill": 0,
           "linewidth": 2,
           "points": true,
           "pointradius": 1,
           "bars": false,
           "stack": false,
           "legend": {
-            "show": false,
+            "show": true,
             "values": false,
             "min": false,
             "max": false,
@@ -250,90 +272,51 @@
           "tooltip": {
             "value_type": "cumulative",
             "query_as_alias": true,
-            "shared": true
+            "shared": false
           },
           "targets": [
             {
               "function": "last",
               "column": "value",
-              "series": "nest.battery_level",
-              "query": "select last(value) from \"nest.battery_level\" where $timeFilter group by time($interval) order asc",
-              "alias": "Voltage"
-            }
-          ],
-          "aliasColors": {},
-          "seriesOverrides": [],
-          "title": "Battery",
-          "leftYAxisLabel": "Volts",
-          "links": []
-        },
-        {
-          "error": false,
-          "span": 6,
-          "editable": true,
-          "type": "graph",
-          "id": 4,
-          "datasource": null,
-          "renderer": "flot",
-          "x-axis": true,
-          "y-axis": false,
-          "scale": 1,
-          "y_formats": [
-            "short",
-            "short"
-          ],
-          "grid": {
-            "leftMax": null,
-            "rightMax": null,
-            "leftMin": 0,
-            "rightMin": null,
-            "threshold1": null,
-            "threshold2": null,
-            "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2Color": "rgba(234, 112, 112, 0.22)"
-          },
-          "annotate": {
-            "enable": false
-          },
-          "resolution": 100,
-          "lines": true,
-          "fill": 10,
-          "linewidth": 0,
-          "points": true,
-          "pointradius": 1,
-          "bars": false,
-          "stack": false,
-          "legend": {
-            "show": false,
-            "values": false,
-            "min": false,
-            "max": false,
-            "current": false,
-            "total": false,
-            "avg": false
-          },
-          "percentage": false,
-          "zerofill": true,
-          "nullPointMode": "connected",
-          "steppedLine": true,
-          "tooltip": {
-            "value_type": "cumulative",
-            "query_as_alias": true,
-            "shared": true
-          },
-          "targets": [
+              "series": "nest.target_humidity",
+              "query": "select last(value) from \"nest.target_humidity\" where $timeFilter group by time($interval) order asc",
+              "alias": "Target"
+            },
+            {
+              "function": "last",
+              "column": "value",
+              "series": "nest.current_humidity",
+              "query": "select last(value) from \"nest.current_humidity\" where $timeFilter group by time($interval) order asc",
+              "alias": "Current"
+            },
+            {
+              "function": "last",
+              "column": "value",
+              "series": "nest.outside_humidity",
+              "query": "select last(value) from \"nest.outside_humidity\" where $timeFilter group by time($interval) order asc",
+              "alias": "Outside"
+            },
             {
               "function": "last",
               "column": "value",
               "series": "nest.heater_on",
               "query": "select last(value) from \"nest.heater_on\" where $timeFilter group by time($interval) order asc",
-              "alias": "State",
-              "fill": ""
+              "alias": "Heating"
             }
           ],
           "aliasColors": {},
-          "seriesOverrides": [],
-          "title": "Heater",
+          "seriesOverrides": [
+            {
+              "alias": "Heating",
+              "fill": 5,
+              "linewidth": 0,
+              "zindex": -3,
+              "steppedLine": true,
+              "points": false,
+              "yaxis": 2
+            }
+          ],
+          "title": "Humidity",
           "leftYAxisLabel": "",
           "links": []
         }
@@ -368,7 +351,7 @@
         "2h",
         "1d"
       ],
-      "now": true,
+      "now": false,
       "collapse": false,
       "notice": false
     }
