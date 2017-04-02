@@ -152,7 +152,7 @@ var postInfluxData = function (data, callback) {
     var bindata = ''
 
     for (var i = 0, len = data.length; i < len; i++) {
-        bindata += data[i].name + ",deviceID=" + NEST_DEVICE_ID + " value=" + data[i].points[0][0]+"\n"
+        bindata += data[i].name + ",deviceID=" + device + " value=" + data[i].points[0][0]+"\n"
     }
 
     req.write(JSON.stringify(data))
