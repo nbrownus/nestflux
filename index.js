@@ -155,7 +155,7 @@ var postInfluxData = function (data, callback) {
         bindata += data[i].name + ",deviceID=" + device + " value=" + data[i].points[0][0]+"\n"
     }
 
-    req.write(JSON.stringify(data))
+    req.write(bindata, 'binary')
     req.end(null,'binary')
 }
 
