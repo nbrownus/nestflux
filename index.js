@@ -9,13 +9,15 @@ var nest = require('unofficial-nest-api'),
     influxDb = process.env.INFLUX_DB,
     influxUser = process.env.INFLUX_USER,
     influxPassword = process.env.INFLUX_PASSWORD,
+    tempCelsius = process.env.TEMP_CELSIUS,
+    wundergroundData = process.env.WUNDERGROUND_DATA,
     wundergroundKey = process.env.WUNDERGROUND_KEY,
     wundergroundStation = process.env.WUNDERGROUND_STATION
 
 var influxReqOptions = {
         host: influxHost,
         port: influxPort,
-        path: '/db/' + influxDb + '/series?' + querystring.stringify({ u: influxUser, p: influxPassword }),
+        path: '/write?db=' + influxDb + '&' + querystring.stringify({ u: influxUser, p: influxPassword }),
         method: 'POST'
     },
     wundergroundReqOptions = {
@@ -63,7 +65,10 @@ nest.login(username, password, function (err, data) {
         console.log(JSON.stringify(influxData))
         postInfluxData(influxData, function () {
             console.log('NEST DONE!')
-            wunderground()
+
+            if(wundergroundData == 'true'){
+                wunderground()
+            }
         })
     })
 })
@@ -120,12 +125,15 @@ var postInfluxData = function (data, callback) {
     var resBody = ''
 
     var req = http.request(influxReqOptions, function (res) {
+
+        res.setEncoding('binary')
+
         res.on('data', function (data) {
             resBody += data.toString()
         })
 
         res.on('end', function () {
-            if (res.statusCode != '200') {
+            if (res.statusCode != '204') {
                 console.error('Something bad happened with influx!')
                 console.error(resBody)
                 process.exit(1)
@@ -141,8 +149,14 @@ var postInfluxData = function (data, callback) {
         process.exit(1)
     })
 
+    var bindata = ''
+
+    for (var i = 0, len = data.length; i < len; i++) {
+        bindata += data[i].name + ",deviceID=" + NEST_DEVICE_ID + " value=" + data[i].points[0][0]+"\n"
+    }
+
     req.write(JSON.stringify(data))
-    req.end()
+    req.end(null,'binary')
 }
 
 /**
@@ -174,5 +188,9 @@ var addInfluxPoint = function (source, point, name, destination, convertFunc) {
  * @returns {Number} The temperature in Fahrenheit
  */
 var fToC = function (temp) {
+    if(tempCelsius == 'true'){
+        return temp
+    }
+
     return ((temp * (9 / 5)) + 32)
 }
