@@ -14,6 +14,7 @@ Feel free to contribute!
 - Git clone the repo
 - copy `settings.sh.example` to `settings.sh`
 - Edit `settings.sh` putting your info into the variables
+- Run `npm install` to install JS dependencies.
 - Run `./bin/nestflux.sh` or put it in upstart/cron/etc
 - Rejoice!
 
